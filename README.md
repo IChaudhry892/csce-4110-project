@@ -12,7 +12,7 @@
 
 ## How to run:
 
-'''
+```
 $ source venv/bin/activate
 $ python main.py
-'''
+```
