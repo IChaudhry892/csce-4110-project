@@ -120,9 +120,32 @@ if __name__ == "__main__":
     if message.isdigit():
         message = int(message)
 
+    # Print blocks of original message
+    print("\n Original message blocks:")
+    original_bytes, _ = convert_to_bytes(message)
+    padded_original = zero_pad(original_bytes)
+    for i, block in enumerate(split_blocks(padded_original)):
+        print(f" Block {i}:")
+        print_block_matrix(block)
+
     ciphertext, data_type = encrypt(message)
     print(f"\nData type: {data_type}")
     print(f"Ciphertext (hex): {ciphertext.hex()}")
 
+    # Print blocks of ciphertext
+    print("Ciphertext blocks:")
+    for i, block in enumerate(split_blocks(ciphertext)):
+        print(f" Block {i}:")
+        print_block_matrix(block)
+
     decrypted_message = decrypt(ciphertext, data_type)
     print(f"Decrypted message: {decrypted_message} (type: {type(decrypted_message).__name__})\n")
+
+    # Print blocks of decrypted message
+    print(" Decrypted message blocks:")
+    decrypted_bytes, _ = convert_to_bytes(decrypted_message)
+    padded_decrypted = zero_pad(decrypted_bytes)
+    for i, block in enumerate(split_blocks(padded_decrypted)):
+        print(f" Block {i}:")
+        print_block_matrix(block)
+        
