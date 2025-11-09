@@ -36,6 +36,6 @@ $ python aes_encryption.py
 ```
 ### Run AES encryption with error handling tests
 ```
-$ python aes_encryption.py --test-errors
+$ python aes_encryption.py --run-tests
 ```
 This option runs automated tests for error handling by modifying the key, ciphertext, or tag during decryption.
