@@ -11,19 +11,19 @@ declare -A sizes=(
   ["45mb"]=47185920
 )
 
-# Generate 5 files per size
+# Generate 100 files per size
 for name in "${!sizes[@]}"; do
   size_bytes="${sizes[$name]}"
   dir="packets/${name}"
   mkdir -p "$dir"
   
-  echo "Generating 5 files of size $name (~$((size_bytes / 1048576)) MB) ..."
+  echo "Generating 100 files of size $name (~$((size_bytes / 1048576)) MB) ..."
   
-  for i in $(seq -w 1 5); do
+  for i in $(seq -w 1 100); do
     head -c "$size_bytes" /dev/urandom > "${dir}/${name}_${i}.bin"
   done
   
-  echo "Created 5 files in ${dir}/"
+  echo "Created 100 files in ${dir}/"
 done
 
 echo "Packets generated."
