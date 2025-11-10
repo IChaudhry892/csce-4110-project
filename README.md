@@ -28,14 +28,21 @@ $ python main.py
 ```
 If **python** invokes Python 2 on your system, use `python3` instead.
 
-## Running AES only:
+## Running the Sensitivity Tests:
 
-### Run AES encryption normally
+### Run Both AES and DES tests
 ```
-$ python aes_encryption.py
+$ python sensitivity_tests.py
 ```
-### Run AES encryption with error handling tests
+### Run DES tests only
 ```
-$ python aes_encryption.py --run-tests
+$ python sensitivity_tests.py --run-des-tests
 ```
-This option runs automated tests for error handling by modifying the key, ciphertext, or tag during decryption.
+### Run AES tests only
+```
+$ python sensitivity_tests.py --run-aes-tests
+```
+### Run AES tests with display blocks option
+```
+$ python sensitivity_tests.py --run-aes-tests-blocks
+```
