@@ -1,5 +1,6 @@
 import aes_encryption
 from aes_encryption import encrypt, decrypt, convert_to_bytes, zero_pad, print_block_matrices
+from des_encryption import des_encrypt, load_keys, load_plaintexts, bit_difference
 
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -95,6 +96,39 @@ def run_key_sensitivity_test(keys, numbers, letters):
         print(" Ciphertext blocks:")
         print_block_matrices(ciphertext)
 
+def run_des_plaintext_sensitivity_test(keys, numbers, letters):
+    print("\nDES PLAINTEXT SENSITIVITY TEST")
+    key = keys[0]
+
+    for data_type, dataset in [("Letters", letters), ("Numbers", numbers)]:
+        print(f"\n--- {data_type} ---")
+        for i in range(len(dataset) - 1):
+            pt1, pt2 = dataset[i], dataset[i + 1]
+
+            c1 = des_encrypt(key, pt1)
+            c2 = des_encrypt(key, pt2)
+
+            diff_bits = bit_difference(c1, c2)
+            total_bits = len(c1) * 8
+            percent_diff = (diff_bits / total_bits) * 100
+
+            print(f"\nPlaintext 1: {pt1} -> Ciphertext 1: {c1.hex().upper()}")
+            print(f"Plaintext 2: {pt2} -> Ciphertext 2: {c2.hex().upper()}")
+            print(f"Different bits: {diff_bits}/{total_bits} ({percent_diff:.2f}%)")
+
+def run_des_key_sensitivity_test(keys, numbers, letters):
+    print("\nDES KEY SENSITIVITY TEST")
+    for pt in letters + numbers:
+        c1 = des_encrypt(keys[0], pt)
+        c2 = des_encrypt(keys[1], pt)
+        diff_bits = bit_difference(c1, c2)
+        total_bits = len(c1) * 8
+        percent_diff = (diff_bits / total_bits) * 100
+        print(f"\nPlaintext: {pt}")
+        print(f"Key 1: {keys[0]} -> Ciphertext: {c1.hex().upper()}")
+        print(f"Key 2: {keys[1]} -> Ciphertext: {c2.hex().upper()}")
+        print(f"Different bits: {diff_bits}/{total_bits} ({percent_diff:.2f}%)")
+
 if __name__ == "__main__":
     keys = load_list_from_file(KEYS_FILE)
     numbers = load_list_from_file(NUMBERS_FILE)
@@ -105,3 +139,6 @@ if __name__ == "__main__":
 
     run_plaintext_sensitivity_test(keys, numbers, letters)
     run_key_sensitivity_test(keys, numbers, letters)
+
+    run_des_plaintext_sensitivity_test(keys, numbers, letters)
+    run_des_key_sensitivity_test(keys, numbers, letters)
