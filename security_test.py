@@ -47,7 +47,11 @@ def run_group(file_label, file, key):
         print(f"Run {i + 1} decryption time: {elapsed_time:.6f} seconds")
     average_decryption_time = sum(times) / len(times)
     print(f"Average decryption time for {file_label}: {average_decryption_time:.6f} seconds\n")
-    return average_decryption_time
+
+    file_size_kb = os.path.getsize(file) / 1024
+    average_decryption_time_per_kb = average_decryption_time / file_size_kb
+
+    return average_decryption_time, average_decryption_time_per_kb
     
 def run_aes_security_test(keys):
     print("\n=== DECRYPTION EFFICIENCY TEST ===")
@@ -69,9 +73,16 @@ def run_aes_security_test(keys):
     results["100MB_image"] = run_group("100MB_image", IMAGES_FILES[2], aes_key)
 
     print("=== AVERAGE DECRYPTION TIME RESULTS ===")
-    for file_label, average__decryption_time in results.items():
-        print(f"{file_label}: {average__decryption_time:.6f} seconds")
-    print()
+    for file_label, (average_decryption_time, average_decryption_time_per_kb) in results.items():
+        print(f"{file_label}: {average_decryption_time:.6f} seconds")
+
+    overall_avg_per_kb = sum(avg_per_kb for _, avg_per_kb in results.values()) / len(results)
+    print(f"\nOverall Average Decryption Time per KB: {overall_avg_per_kb:.9f} seconds")
+
+    # Calculate overall average time to crack 1KB of ciphertext with brute force in years
+    keyspace_size = 2 ** 128  # Number of possible keys for AES-128
+    avg_time_to_crack_1kb = overall_avg_per_kb * keyspace_size
+    print(f"Estimated time to brute-force crack 1KB of ciphertext: {avg_time_to_crack_1kb / (60 * 60 * 24 * 365):.6e} years\n")
     
 if __name__ == "__main__":
     keys = load_list_from_file(KEYS_FILE)
