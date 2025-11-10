@@ -6,6 +6,17 @@ import sys
 # KEY = get_random_bytes(16)
 KEY = b"ThisIsA16ByteKey"
 
+def zero_pad(data_bytes):
+    """ Pads data with zero bytes to make its length a multiple of 16 """
+    padding_needed = 16 - (len(data_bytes) % 16)
+    if padding_needed == 16: # No padding needed
+        return data_bytes
+    return data_bytes + b"\x00" * padding_needed
+
+def zero_unpad(data_bytes):
+    """ Removes zero padding """
+    return data_bytes.rstrip(b"\x00")
+
 def convert_to_bytes(data):
     """ Converts the input data to bytes if it is not already """
     if isinstance(data, str):
@@ -29,47 +40,39 @@ def encrypt(plaintext, key=KEY):
     """ Encrypts the given plaintext using AES in EAX mode """
     # 2. Create a new AES cipher object for encryption in EAX mode
     data_bytes, data_type = convert_to_bytes(plaintext)
-    cipher = AES.new(key, AES.MODE_EAX)
-    nonce = cipher.nonce
-    ciphertext, tag = cipher.encrypt_and_digest(data_bytes)
 
-    return nonce, ciphertext, tag, data_type
+    padded = zero_pad(data_bytes)
+    cipher = AES.new(key, AES.MODE_ECB)
+    ciphertext = cipher.encrypt(padded)
 
-def decrypt(nonce, ciphertext, tag, data_type, key=KEY, test_params=None):
+    return ciphertext, data_type
+
+def decrypt(ciphertext, data_type, key=KEY, test_params=None):
     """ Decrypts the given ciphertext using AES in EAX mode """
-
-    # OPTIONAL: TESTING ERROR HANDLING BY USING A DIFFERENT KEY
-    if test_params and test_params.get("use_different_key"):
-        key = get_random_bytes(16)
-        print("New key (hex):", key.hex())
-
     # 3. Create a new AES cipher object for decryption using the same nonce
-    cipher = AES.new(key, AES.MODE_EAX, nonce=nonce)
+    cipher = AES.new(key, AES.MODE_ECB)
+    padded_decrypted = cipher.decrypt(ciphertext)
+    decrypted_bytes = zero_unpad(padded_decrypted)
+    
+    return convert_from_bytes(decrypted_bytes, data_type)
 
-    # OPTIONAL: TESTING ERROR HANDLING BY MODIFYING CIPHERTEXT
-    if test_params and test_params.get("modify_ciphertext"):
-        ciphertext = bytearray(ciphertext)
-        ciphertext[0] ^= 1  # flip one bit
-        ciphertext = bytes(ciphertext)
-        print("Modified ciphertext (hex):", ciphertext.hex())
+def split_blocks(data_bytes, block_size=16):
+    """ Splits data bytes into blocks of specified size """
+    return [data_bytes[i:i+block_size] for i in range(0, len(data_bytes), block_size)]
 
-    decrypted_bytes = cipher.decrypt(ciphertext)
+def print_block_matrix(block, matrix_size=4):
+    """ Prints a single block as a 4x4 matrix """
+    for r in range (matrix_size):
+        row = block[r::matrix_size]
+        print(" " + " ".join(f"{b:02x}" for b in row))
+    print()
 
-    # OPTIONAL: TESTING ERROR HANDLING BY MODIFYING TAG
-    if test_params and test_params.get("modify_tag"):
-        tag = bytearray(tag)
-        tag[0] ^= 1  # flip one bit
-        tag = bytes(tag)
-        print("Modified tag (hex):", tag.hex())
-
-    # 4. Verify the integrity of the message using the tag
-    try:
-        cipher.verify(tag)
-        print("SUCCESS: The message is authentic")
-        return convert_from_bytes(decrypted_bytes, data_type)
-    except ValueError: # If the tag does not match
-        print("ERROR: Key incorrect or message corrupted")
-        return None
+def print_block_matrices(data_bytes):
+    """ Prints all blocks of a given data bytes as 4x4 matrices """
+    blocks = split_blocks(data_bytes)
+    for i, block in enumerate(blocks):
+        print(f" Block {i}:")
+        print_block_matrix(block)
     
 def run_tests():
     """ Runs a series of tests to validate encryption and decryption """
@@ -77,21 +80,34 @@ def run_tests():
 
     tests = [
         ("No tamper (Control)", {}),
-        ("Modify ciphertext", {"modify_ciphertext": True}),
-        ("Modify tag", {"modify_tag": True}),
-        ("Use different key", {"use_different_key": True}),
     ]
 
     for test_name, test_params in tests:
         print(f"--- Running test: {test_name}")
-        message = "Ruh-roh Raggy!"
-        nonce, ciphertext, tag, data_type = encrypt(message)
+        message = "Ruh-roh Raggy! Ratch rout ror rat rar!"
+        print(f"Original message: {message} (type: {type(message).__name__})")
+        # Print blocks of original message
+        print(" Original message blocks:")
+        original_bytes, _ = convert_to_bytes(message)
+        padded_original = zero_pad(original_bytes)
+        print_block_matrices(padded_original)
+
+        ciphertext, data_type = encrypt(message)
         print(f"\nData type: {data_type}")
         print(f"Ciphertext (hex): {ciphertext.hex()}")
-        print(f"Tag (hex): {tag.hex()}")
         print(f"Key (hex): {KEY.hex()}")
-        decrypted_message = decrypt(nonce, ciphertext, tag, data_type, test_params=test_params)
+        # Print blocks of ciphertext
+        print("Ciphertext blocks:")
+        print_block_matrices(ciphertext)
+
+        decrypted_message = decrypt(ciphertext, data_type, test_params=test_params)
         print(f"Decrypted message: {decrypted_message} (type: {type(decrypted_message).__name__})")
+        # Print blocks of decrypted message
+        print(" Decrypted message blocks:")
+        decrypted_bytes, _ = convert_to_bytes(decrypted_message)
+        padded_decrypted = zero_pad(decrypted_bytes)
+        print_block_matrices(padded_decrypted)
+
         print(f"Test: {test_name} completed.\n")
 
 if __name__ == "__main__":
@@ -105,9 +121,25 @@ if __name__ == "__main__":
     if message.isdigit():
         message = int(message)
 
-    nonce, ciphertext, tag, data_type = encrypt(message)
+    # Print blocks of original message
+    print("\n Original message blocks:")
+    original_bytes, _ = convert_to_bytes(message)
+    padded_original = zero_pad(original_bytes)
+    print_block_matrices(padded_original)
+
+    ciphertext, data_type = encrypt(message)
     print(f"\nData type: {data_type}")
     print(f"Ciphertext (hex): {ciphertext.hex()}")
 
-    decrypted_message = decrypt(nonce, ciphertext, tag, data_type)
-    print(f"Decrypted message: {decrypted_message} (type: {type(decrypted_message).__name__})\n")
+    # Print blocks of ciphertext
+    print("Ciphertext blocks:")
+    print_block_matrices(ciphertext)
+
+    decrypted_message = decrypt(ciphertext, data_type)
+    print(f"Decrypted message: {decrypted_message} (type: {type(decrypted_message).__name__})")
+
+    # Print blocks of decrypted message
+    print(" Decrypted message blocks:")
+    decrypted_bytes, _ = convert_to_bytes(decrypted_message)
+    padded_decrypted = zero_pad(decrypted_bytes)
+    print_block_matrices(padded_decrypted)
