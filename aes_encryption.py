@@ -66,6 +66,13 @@ def print_block_matrix(block, matrix_size=4):
         row = block[r::matrix_size]
         print(" " + " ".join(f"{b:02x}" for b in row))
     print()
+
+def print_block_matrices(data_bytes):
+    """ Prints all blocks of a given data bytes as 4x4 matrices """
+    blocks = split_blocks(data_bytes)
+    for i, block in enumerate(blocks):
+        print(f" Block {i}:")
+        print_block_matrix(block)
     
 def run_tests():
     """ Runs a series of tests to validate encryption and decryption """
@@ -83,9 +90,7 @@ def run_tests():
         print(" Original message blocks:")
         original_bytes, _ = convert_to_bytes(message)
         padded_original = zero_pad(original_bytes)
-        for i, block in enumerate(split_blocks(padded_original)):
-            print(f" Block {i}:")
-            print_block_matrix(block)
+        print_block_matrices(padded_original)
 
         ciphertext, data_type = encrypt(message)
         print(f"\nData type: {data_type}")
@@ -93,9 +98,7 @@ def run_tests():
         print(f"Key (hex): {KEY.hex()}")
         # Print blocks of ciphertext
         print("Ciphertext blocks:")
-        for i, block in enumerate(split_blocks(ciphertext)):
-            print(f" Block {i}:")
-            print_block_matrix(block)
+        print_block_matrices(ciphertext)
 
         decrypted_message = decrypt(ciphertext, data_type, test_params=test_params)
         print(f"Decrypted message: {decrypted_message} (type: {type(decrypted_message).__name__})")
@@ -103,9 +106,7 @@ def run_tests():
         print(" Decrypted message blocks:")
         decrypted_bytes, _ = convert_to_bytes(decrypted_message)
         padded_decrypted = zero_pad(decrypted_bytes)
-        for i, block in enumerate(split_blocks(padded_decrypted)):
-            print(f" Block {i}:")
-            print_block_matrix(block)
+        print_block_matrices(padded_decrypted)
 
         print(f"Test: {test_name} completed.\n")
 
@@ -124,9 +125,7 @@ if __name__ == "__main__":
     print("\n Original message blocks:")
     original_bytes, _ = convert_to_bytes(message)
     padded_original = zero_pad(original_bytes)
-    for i, block in enumerate(split_blocks(padded_original)):
-        print(f" Block {i}:")
-        print_block_matrix(block)
+    print_block_matrices(padded_original)
 
     ciphertext, data_type = encrypt(message)
     print(f"\nData type: {data_type}")
@@ -134,18 +133,13 @@ if __name__ == "__main__":
 
     # Print blocks of ciphertext
     print("Ciphertext blocks:")
-    for i, block in enumerate(split_blocks(ciphertext)):
-        print(f" Block {i}:")
-        print_block_matrix(block)
+    print_block_matrices(ciphertext)
 
     decrypted_message = decrypt(ciphertext, data_type)
-    print(f"Decrypted message: {decrypted_message} (type: {type(decrypted_message).__name__})\n")
+    print(f"Decrypted message: {decrypted_message} (type: {type(decrypted_message).__name__})")
 
     # Print blocks of decrypted message
     print(" Decrypted message blocks:")
     decrypted_bytes, _ = convert_to_bytes(decrypted_message)
     padded_decrypted = zero_pad(decrypted_bytes)
-    for i, block in enumerate(split_blocks(padded_decrypted)):
-        print(f" Block {i}:")
-        print_block_matrix(block)
-        
+    print_block_matrices(padded_decrypted)
