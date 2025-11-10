@@ -1,44 +1,91 @@
-import aes_encryption
-from aes_encryption import encrypt, decrypt, convert_to_bytes, zero_pad, print_block_matrices
+from aes_encryption import encrypt, convert_to_bytes, zero_pad, print_block_matrices, pad_key_for_aes
 
 import os
+import sys
+import time
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 KEYS_FILE = os.path.join(BASE_DIR, "data", "keys.txt")
 
 AUDIOS_DIR = os.path.join(BASE_DIR, "data", "files", "audios")
+DOCUMENTS_DIR = os.path.join(BASE_DIR, "data", "files", "documents")
+IMAGES_DIR = os.path.join(BASE_DIR, "data", "files", "images")
+
 AUDIOS_FILES = sorted([
     os.path.join(AUDIOS_DIR, filename) for filename in os.listdir(AUDIOS_DIR)
 ], reverse=True)
-
-DOCUMENTS_DIR = os.path.join(BASE_DIR, "data", "files", "documents")
 DOCUMENTS_FILES = sorted([
     os.path.join(DOCUMENTS_DIR, filename) for filename in os.listdir(DOCUMENTS_DIR)
 ], reverse=True)
-
-IMAGES_DIR = os.path.join(BASE_DIR, "data", "files", "images")
 IMAGES_FILES = sorted([
     os.path.join(IMAGES_DIR, filename) for filename in os.listdir(IMAGES_DIR)
 ], reverse=True)
 
+SAVED_DIR = os.path.join(BASE_DIR, "data", "encrypted_files")
+os.makedirs(SAVED_DIR, exist_ok=True)
 
 def load_list_from_file(file_path):
     with open(file_path, 'r') as f:
         return [line.strip() for line in f.readlines()]
+
+def read_binary_file(file_path):
+    with open(file_path, 'rb') as f:
+        return f.read()
     
-def pad_key_for_aes(key_str):
-    """ Pads the key string with zeros to make it 16 bytes long """
-    return key_str.ljust(16, "0")
+def write_binary_file(file_path, data_bytes):
+    with open(file_path, 'wb') as f:
+        f.write(data_bytes)
 
-def run_efficiency_test(keys):
+def time_to_encrypt(data_bytes, key):
+    start_time = time.time()
+    ciphertext, _ = encrypt(data_bytes, key=key)
+    end_time = time.time()
+    return end_time - start_time, ciphertext
+
+def run_group(file_label, file, key, category):
+    print(f"--- Files of label: {file_label} ---\n")
+    times = []
+    # Encrypt the same file 10 times due to storage constraints
+    for i in range(10):
+        data_bytes = read_binary_file(file)
+        elapsed_time, ciphertext = time_to_encrypt(data_bytes, key)
+        times.append(elapsed_time)
+        print(f"Run {i + 1} encryption time: {elapsed_time:.6f} seconds")
+
+        if i == 9:  # On the last run, save the encrypted file
+            category_dir = os.path.join(SAVED_DIR, category)
+            os.makedirs(category_dir, exist_ok=True)
+            out_path = os.path.join(category_dir, f"{file_label}_encrypted.bin")
+            write_binary_file(out_path, ciphertext)
+            print(f"Saved encrypted file to: {out_path}")
+
+    average_encryption_time = sum(times) / len(times)
+    print(f"\nAverage encryption time: {average_encryption_time:.6f} seconds\n")
+    return average_encryption_time
+
+def run_aes_efficiency_test(keys):
     print("\n=== ENCRYPTION EFFICIENCY TEST ===")
-
     # Use the first key for testing
-    des_key = keys[0].encode("utf-8")
     aes_key = pad_key_for_aes(keys[0]).encode("utf-8")
-    print(f"\nUsing DES Key: {des_key}")
     print(f"Using AES Key: {aes_key}\n")
 
-    pass
+    results = {}
+    results["1MB_audio"] = run_group("1MB_audio", AUDIOS_FILES[0], aes_key, "audios")
+    results["10MB_audio"] = run_group("10MB_audio", AUDIOS_FILES[1], aes_key, "audios")
+    results["100MB_audio"] = run_group("100MB_audio", AUDIOS_FILES[2], aes_key, "audios")
+
+    results["1MB_document"] = run_group("1MB_document", DOCUMENTS_FILES[0], aes_key, "documents")
+    results["10MB_document"] = run_group("10MB_document", DOCUMENTS_FILES[1], aes_key, "documents")
+    results["100MB_document"] = run_group("100MB_document", DOCUMENTS_FILES[2], aes_key, "documents")
+
+    results["1MB_image"] = run_group("1MB_image", IMAGES_FILES[0], aes_key, "images")
+    results["10MB_image"] = run_group("10MB_image", IMAGES_FILES[1], aes_key, "images")
+    results["100MB_image"] = run_group("100MB_image", IMAGES_FILES[2], aes_key, "images")
+
+    print("=== AVERAGE ENCRYPTION TIME RESULTS ===")
+    for file_label, average__encryption_time in results.items():
+        print(f"{file_label}: {average__encryption_time:.6f} seconds")
+    print()
 
 if __name__ == "__main__":
     keys = load_list_from_file(KEYS_FILE)
@@ -46,3 +93,9 @@ if __name__ == "__main__":
     print("Loaded AUDIOS_FILES:", AUDIOS_FILES)
     print("Loaded DOCUMENTS_FILES:", DOCUMENTS_FILES)
     print("Loaded IMAGES_FILES:", IMAGES_FILES)
+
+    if "--run-aes-tests" in sys.argv:
+        run_aes_efficiency_test(keys)
+        sys.exit(0)
+
+    run_aes_efficiency_test(keys)
