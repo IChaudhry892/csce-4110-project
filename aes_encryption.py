@@ -17,28 +17,36 @@ def zero_unpad(data_bytes):
     """ Removes zero padding """
     return data_bytes.rstrip(b"\x00")
 
+def pad_key_for_aes(key_str):
+    """ Pads the key string with zeros to make it 16 bytes long """
+    return key_str.ljust(16, "0")
+
 def convert_to_bytes(data):
     """ Converts the input data to bytes if it is not already """
-    if isinstance(data, str):
+    if isinstance(data, bytes):
+        return data, "bytes"
+    elif isinstance(data, str):
         return data.encode("utf-8"), "str"
     elif isinstance(data, int):
         # Uses length of 8 bytes for integer representation
         return data.to_bytes(8, byteorder='big'), "int"
     else:
-        raise TypeError("Unsupported data type for conversion to bytes")
+        raise TypeError(f"Unsupported data type for conversion to bytes: {type(data).__name__}")
 
 def convert_from_bytes(data_bytes, data_type):
     """ Converts decrypted bytes back to the specified data type """
-    if data_type == "str":
+    if data_type == "bytes":
+        return data_bytes
+    elif data_type == "str":
         return data_bytes.decode("utf-8")
     elif data_type == "int":
         return int.from_bytes(data_bytes, byteorder='big')
     else:
-        raise TypeError("Unsupported data type for conversion from bytes")
+        raise TypeError(f"Unsupported data type for conversion from bytes: {data_type}")
 
 def encrypt(plaintext, key=KEY):
-    """ Encrypts the given plaintext using AES in EAX mode """
-    # 2. Create a new AES cipher object for encryption in EAX mode
+    """ Encrypts the given plaintext using AES in ECB mode """
+    # 2. Create a new AES cipher object for encryption in ECB mode
     data_bytes, data_type = convert_to_bytes(plaintext)
 
     padded = zero_pad(data_bytes)
@@ -48,8 +56,8 @@ def encrypt(plaintext, key=KEY):
     return ciphertext, data_type
 
 def decrypt(ciphertext, data_type, key=KEY, test_params=None):
-    """ Decrypts the given ciphertext using AES in EAX mode """
-    # 3. Create a new AES cipher object for decryption using the same nonce
+    """ Decrypts the given ciphertext using AES in ECB mode """
+    # 3. Create a new AES cipher object for decryption using the same key
     cipher = AES.new(key, AES.MODE_ECB)
     padded_decrypted = cipher.decrypt(ciphertext)
     decrypted_bytes = zero_unpad(padded_decrypted)
