@@ -1,3 +1,5 @@
 .DS_Store
 __pycache__/
 encrypted_files/
+packets/
+encrypted_packets/

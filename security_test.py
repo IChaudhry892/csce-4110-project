@@ -57,7 +57,7 @@ def run_group(file_label, file, key):
     return average_decryption_time, average_decryption_time_per_kb
     
 def run_aes_security_test(keys):
-    print("\n=== DECRYPTION EFFICIENCY TEST ===")
+    print("\n=== AES SECURITY TEST ===")
     # Use the first key for testing
     aes_key = pad_key_for_aes(keys[0]).encode("utf-8")
     print(f"Using AES Key: {aes_key}\n")
@@ -153,7 +153,7 @@ if __name__ == "__main__":
     print("Loaded DOCUMENTS_FILES:", DOCUMENTS_FILES)
     print("Loaded IMAGES_FILES:", IMAGES_FILES)
 
-    if "--run-aes-tests" in sys.argv:
+    if "--run-aes-test" in sys.argv:
         run_aes_security_test(keys)
         sys.exit(0)
     
