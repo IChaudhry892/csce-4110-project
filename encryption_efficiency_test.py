@@ -143,7 +143,7 @@ def run_des_efficiency_test(keys):
 
     print("DES AVERAGE ENCRYPTION TIME RESULTS")
     for file_label, avg_time in results.items():
-        print(f"{file_label}: {avg_time:.6f} seconds\n")
+        print(f"{file_label}: {avg_time:.6f} seconds")
 
     return results
 

@@ -1,4 +1,7 @@
 from aes_encryption import encrypt, decrypt, convert_to_bytes, zero_pad, print_block_matrices, pad_key_for_aes
+from des_encryption import des_encrypt, des_decrypt, load_keys, load_plaintexts
+from Crypto.Cipher import DES
+from Crypto.Util.Padding import unpad
 
 import os
 import sys
@@ -84,6 +87,65 @@ def run_aes_security_test(keys):
     avg_time_to_crack_1kb = overall_avg_per_kb * keyspace_size
     print(f"Estimated time to brute-force crack 1KB of ciphertext: {avg_time_to_crack_1kb / (60 * 60 * 24 * 365):.6e} years\n")
     
+def time_to_decrypt_des(ciphertext, key):
+    start_time = time.time()
+    key_bytes = key.encode('utf-8')[:8].ljust(8, b'0')
+    cipher = DES.new(key_bytes, DES.MODE_ECB)
+    decrypted = cipher.decrypt(ciphertext)
+    try:
+        unpad(decrypted, 8)
+    except ValueError:
+        pass  # padding issues ignored for timing
+    end_time = time.time()
+    return end_time - start_time
+
+
+def run_group_des(file_label, file, key):
+    print(f"DES Decryption for: {file_label}\n")
+    times = []
+    for i in range(10):
+        ciphertext = read_binary_file(file)
+        elapsed_time = time_to_decrypt_des(ciphertext, key)
+        times.append(elapsed_time)
+        print(f"Run {i + 1} DES decryption time: {elapsed_time:.6f} seconds")
+
+    average_decryption_time = sum(times) / len(times)
+    print(f"Average DES decryption time for {file_label}: {average_decryption_time:.6f} seconds\n")
+
+    file_size_kb = os.path.getsize(file) / 1024
+    average_decryption_time_per_kb = average_decryption_time / file_size_kb
+    return average_decryption_time, average_decryption_time_per_kb
+
+
+def run_des_security_test(keys):
+    print("\nDES DECRYPTION EFFICIENCY & SECURITY TEST")
+    des_key = keys[0]
+    print(f"Using DES Key: {des_key}\n")
+
+    results = {}
+    results["1MB_audio"] = run_group_des("1MB_audio", AUDIOS_FILES[0], des_key)
+    results["10MB_audio"] = run_group_des("10MB_audio", AUDIOS_FILES[1], des_key)
+    results["100MB_audio"] = run_group_des("100MB_audio", AUDIOS_FILES[2], des_key)
+
+    results["1MB_document"] = run_group_des("1MB_document", DOCUMENTS_FILES[0], des_key)
+    results["10MB_document"] = run_group_des("10MB_document", DOCUMENTS_FILES[1], des_key)
+    results["100MB_document"] = run_group_des("100MB_document", DOCUMENTS_FILES[2], des_key)
+
+    results["1MB_image"] = run_group_des("1MB_image", IMAGES_FILES[0], des_key)
+    results["10MB_image"] = run_group_des("10MB_image", IMAGES_FILES[1], des_key)
+    results["100MB_image"] = run_group_des("100MB_image", IMAGES_FILES[2], des_key)
+
+    print("DES AVERAGE DECRYPTION TIME RESULTS")
+    for file_label, (avg_dec_time, avg_dec_time_per_kb) in results.items():
+        print(f"{file_label}: {avg_dec_time:.6f} seconds")
+
+    overall_avg_per_kb = sum(avg_per_kb for _, avg_per_kb in results.values()) / len(results)
+    print(f"\nOverall Average DES Decryption Time per KB: {overall_avg_per_kb:.9f} seconds")
+
+    keyspace_size = 2 ** 56
+    avg_time_to_crack_1kb = overall_avg_per_kb * keyspace_size
+    print(f"Estimated time to brute-force crack 1KB of DES ciphertext: {avg_time_to_crack_1kb / (60 * 60 * 24 * 365):.6e} years\n")
+
 if __name__ == "__main__":
     keys = load_list_from_file(KEYS_FILE)
     print("Loaded Keys:", keys)
@@ -94,5 +156,10 @@ if __name__ == "__main__":
     if "--run-aes-tests" in sys.argv:
         run_aes_security_test(keys)
         sys.exit(0)
+    
+    if "--run-des-tests" in sys.argv:
+        run_des_security_test(keys)
+        sys.exit(0)
 
     run_aes_security_test(keys)
+    run_des_security_test(keys)
