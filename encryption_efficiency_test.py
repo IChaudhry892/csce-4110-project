@@ -1,4 +1,5 @@
 from aes_encryption import encrypt, convert_to_bytes, zero_pad, print_block_matrices, pad_key_for_aes
+from des_encryption import des_encrypt, load_keys, load_plaintexts
 
 import os
 import sys
@@ -87,6 +88,65 @@ def run_aes_efficiency_test(keys):
         print(f"{file_label}: {average__encryption_time:.6f} seconds")
     print()
 
+def encrypt_time_des(data_bytes, key):
+    from Crypto.Cipher import DES
+    from Crypto.Util.Padding import pad
+    
+    key_bytes = key.encode('utf-8')[:8].ljust(8, b'0')
+    des = DES.new(key_bytes, DES.MODE_ECB)
+    padded = pad(data_bytes, 8)
+    start_time = time.time()
+    ciphertext = des.encrypt(padded)
+    end_time = time.time()
+    
+    return end_time - start_time, ciphertext
+
+def run_group_des(file_label, file, key, category):
+    print(f"DES Encryption for: {file_label}\n")
+    times = []
+
+    for i in range(10):
+        data_bytes = read_binary_file(file)
+        elapsed_time, ciphertext = encrypt_time_des(data_bytes, key)
+        times.append(elapsed_time)
+        print(f"Run {i+1} encryption time: {elapsed_time:.6f} seconds")
+
+        if i == 9:
+            category_dir = os.path.join(SAVED_DIR, category)
+            os.makedirs(category_dir, exist_ok=True)
+            out_path = os.path.join(category_dir, f"{file_label}_des_encrypted.bin")
+            write_binary_file(out_path, ciphertext)
+            print(f"Saved DES encrypted file to: {out_path}")
+        
+    avg_encryption_time = sum(times) / len(times)
+    print(f"\nAverage DES encryption time: {avg_encryption_time:.6f} seconds\n")
+
+    return avg_encryption_time
+
+def run_des_efficiency_test(keys):
+    print("DES ENCRYPTION TEST")
+    des_key = keys[0]
+    print(f"Using DES key: {des_key}")
+
+    results = {}
+    results["1MB_audio"] = run_group_des("1MB_audio", AUDIOS_FILES[0], des_key, "audios")
+    results["10MB_audio"] = run_group_des("10MB_audio", AUDIOS_FILES[1], des_key, "audios")
+    results["100MB_audio"] = run_group_des("100MB_audio", AUDIOS_FILES[2], des_key, "audios")
+
+    results["1MB_document"] = run_group_des("1MB_document", DOCUMENTS_FILES[0], des_key, "documents")
+    results["10MB_document"] = run_group_des("10MB_document", DOCUMENTS_FILES[1], des_key, "documents")
+    results["100MB_document"] = run_group_des("100MB_document", DOCUMENTS_FILES[2], des_key, "documents")
+
+    results["1MB_image"] = run_group_des("1MB_image", IMAGES_FILES[0], des_key, "images")
+    results["10MB_image"] = run_group_des("10MB_image", IMAGES_FILES[1], des_key, "images")
+    results["100MB_image"] = run_group_des("100MB_image", IMAGES_FILES[2], des_key, "images")
+
+    print("DES AVERAGE ENCRYPTION TIME RESULTS")
+    for file_label, avg_time in results.items():
+        print(f"{file_label}: {avg_time:.6f} seconds\n")
+
+    return results
+
 if __name__ == "__main__":
     keys = load_list_from_file(KEYS_FILE)
     print("Loaded Keys:", keys)
@@ -98,4 +158,9 @@ if __name__ == "__main__":
         run_aes_efficiency_test(keys)
         sys.exit(0)
 
+    if "--run-des-tests" in sys.argv:
+        run_des_efficiency_test(keys)
+        sys.exit(0)
+
     run_aes_efficiency_test(keys)
+    run_des_efficiency_test(keys)
