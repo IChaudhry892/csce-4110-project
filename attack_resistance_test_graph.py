@@ -24,7 +24,7 @@ class LineGraph(QWidget):
         x = [0, 5, 15, 25, 35, 45, 50]
 
         # DES sample line (you can update these values as needed)
-        des_y = [0.398, 0.397, 0.396, 0.395, 0.394, 0.393, 0.392]
+        # des_y = [0.398, 0.397, 0.396, 0.395, 0.394, 0.393, 0.392]
 
         # AES line + marked points
         aes_points_x = [5, 15, 25, 35, 45]
@@ -34,7 +34,7 @@ class LineGraph(QWidget):
         aes_y_full = [None, 0.397293, 0.393768, 0.392728, 0.392346, 0.391747, None]
 
         # Plot DES (blue)
-        ax.plot(x, des_y, label="DES")
+        # ax.plot(x, des_y, label="DES")
 
         # Plot AES (red line + red dots)
         ax.plot(x, aes_y_full, "r-", label="AES")

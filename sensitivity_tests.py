@@ -34,7 +34,7 @@ def run_aes_plaintext_sensitivity_test(keys, numbers, letters, display_blocks=Fa
             diff_bits = bit_difference(ciphertext1, ciphertext2)
             total_bits = len(ciphertext1) * 8
             percent_diff = (diff_bits / total_bits) * 100
-            print(f"Plaintext {i + 1}: {plaintext1} -> Ciphertext (hex): {ciphertext1.hex()}")
+            print(f"Plaintext {i + 1}: {plaintext1} -> Ciphertext (hex): {ciphertext1.hex().upper()}")
             if display_blocks:
                 print(f" Plaintext {i + 1} blocks:")
                 original_bytes, _ = convert_to_bytes(plaintext1)
@@ -42,7 +42,7 @@ def run_aes_plaintext_sensitivity_test(keys, numbers, letters, display_blocks=Fa
                 print_block_matrices(padded_original)
                 print(f" Ciphertext {i + 1} blocks:")
                 print_block_matrices(ciphertext1)
-            print(f"Plaintext {i + 2}: {plaintext2} -> Ciphertext (hex): {ciphertext2.hex()}")
+            print(f"Plaintext {i + 2}: {plaintext2} -> Ciphertext (hex): {ciphertext2.hex().upper()}")
             if display_blocks:
                 print(f" Plaintext {i + 2} blocks:")
                 original_bytes, _ = convert_to_bytes(plaintext2)
@@ -69,7 +69,7 @@ def run_aes_key_sensitivity_test(keys, numbers, letters, display_blocks=False):
             aes_key = pad_key_for_aes(key).encode("utf-8")
             ciphertext, data_type = encrypt(plaintext, key=aes_key)
             ciphertexts.append(ciphertext)
-            print(f"Key {i + 1}: {key} -> Ciphertext (hex): {ciphertext.hex()}")
+            print(f"Key {i + 1}: {key} -> Ciphertext (hex): {ciphertext.hex().upper()}")
             if display_blocks:
                 print(" Original plaintext blocks:")
                 original_bytes, _ = convert_to_bytes(plaintext)
