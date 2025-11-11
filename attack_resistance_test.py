@@ -1,5 +1,8 @@
 from aes_encryption import encrypt, decrypt, convert_to_bytes, zero_pad, print_block_matrices, pad_key_for_aes
+from des_encryption import des_encrypt, des_decrypt, load_keys
 from Crypto.Random import get_random_bytes
+from Crypto.Cipher import DES
+from Crypto.Util.Padding import pad, unpad
 
 import os
 import sys
@@ -131,6 +134,84 @@ def run_aes_attack_resistance_test(keys):
             print(f"{size_label}: No packets tested.")
     print()
 
+def simulate_des_attack_on_single_ciphertext(ciphertext: bytes, original_plaintext: bytes, time_limit: float):
+    best_match_fraction = 0.0
+    best_match_key = None
+    attempts = 0
+    start = time.perf_counter()
+    deadline = start + time_limit
+
+    while time.perf_counter() < deadline:
+        attempts += 1
+        candidate_key = get_random_bytes(8)
+        cipher = DES.new(candidate_key, DES.MODE_ECB)
+        try:
+            candidate_plaintext = unpad(cipher.decrypt(ciphertext), 8)
+        except ValueError:
+            candidate_plaintext = b""
+        match_fraction = byte_match_fraction(candidate_plaintext, original_plaintext)
+        if match_fraction > best_match_fraction:
+            best_match_fraction = match_fraction
+            best_match_key = candidate_key
+
+    elapsed = time.perf_counter() - start
+    best_match_key_hex = best_match_key.hex() if best_match_key else None
+    return best_match_fraction, best_match_key_hex, attempts, elapsed
+
+def run_des_attack_resistance_test(keys):
+    print("\nDES ATTACK RESISTANCE TEST")
+    real_key = keys[0][:8].ljust(8, '0')
+    print(f"Using DES Key: {real_key}")
+
+    packets_by_size = {
+        "5MB": sorted([os.path.join(PACKETS_5MB_DIR, f) for f in os.listdir(PACKETS_5MB_DIR)]),
+        "15MB": sorted([os.path.join(PACKETS_15MB_DIR, f) for f in os.listdir(PACKETS_15MB_DIR)]),
+        "25MB": sorted([os.path.join(PACKETS_25MB_DIR, f) for f in os.listdir(PACKETS_25MB_DIR)]),
+        "35MB": sorted([os.path.join(PACKETS_35MB_DIR, f) for f in os.listdir(PACKETS_35MB_DIR)]),
+        "45MB": sorted([os.path.join(PACKETS_45MB_DIR, f) for f in os.listdir(PACKETS_45MB_DIR)]),
+    }
+
+    results = {}
+    for size_label, packet_files in packets_by_size.items():
+        if not packet_files:
+            results[size_label] = []
+            continue
+        size_out_dir = os.path.join(SAVED_DIR, size_label)
+        os.makedirs(size_out_dir, exist_ok=True)
+        results[size_label] = []
+
+        print(f"\nDES Packets of Size: {size_label}")
+        for packet_file in packet_files:
+            basename = os.path.basename(packet_file)
+            print(f"\nPacket: {basename}")
+
+            original_data = read_binary_file(packet_file)
+            des_key_bytes = real_key[:8].encode('latin-1')
+            cipher = DES.new(des_key_bytes, DES.MODE_ECB)
+            ciphertext = cipher.encrypt(pad(original_data, 8))
+
+            out_path = os.path.join(size_out_dir, f"{basename}_des_encrypted.bin")
+            write_binary_file(out_path, ciphertext)
+            print(f"Saved encrypted packet to: {out_path} (size: {len(ciphertext)} bytes)")
+
+            best_fraction, best_key_hex, attempts, elapsed = simulate_des_attack_on_single_ciphertext(
+                ciphertext, original_data, TIME_PER_PACKET
+            )
+
+            results[size_label].append(best_fraction)
+            print(f"Best matched fraction: {best_fraction:.6f}")
+            print(f"Best matched key (hex): {best_key_hex}")
+            print(f"Attempts: {attempts} in {elapsed:.3f} seconds")
+
+    print("\nDES DECRYPTION INTEGRITY RESULTS")
+    for size_label, fractions in results.items():
+        if fractions:
+            average_fraction = sum(fractions) / len(fractions)
+            print(f"{size_label}: average best matched fraction = {average_fraction*100:.6f}% over {len(fractions)} packets")
+        else:
+            print(f"{size_label}: No packets tested.")
+    print()
+
 if __name__ == "__main__":
     keys = load_list_from_file(KEYS_FILE)
     print("Loaded Keys:", keys)
@@ -139,8 +220,14 @@ if __name__ == "__main__":
     print("Loaded PACKETS_25MB_FILES:", PACKETS_25MB_FILES)
     print("Loaded PACKETS_35MB_FILES:", PACKETS_35MB_FILES)
     print("Loaded PACKETS_45MB_FILES:", PACKETS_45MB_FILES)
+
     if "--run-aes-test" in sys.argv:
         run_aes_attack_resistance_test(keys)
         sys.exit(0)
 
+    if "--run-des-test" in sys.argv:
+        run_des_attack_resistance_test(keys)
+        sys.exit(0)
+
     run_aes_attack_resistance_test(keys)
+    run_des_attack_resistance_test(keys)
