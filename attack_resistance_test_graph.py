@@ -24,7 +24,7 @@ class LineGraph(QWidget):
         x = [0, 5, 15, 25, 35, 45, 50]
 
         # DES sample line (you can update these values as needed)
-        # des_y = [0.398, 0.397, 0.396, 0.395, 0.394, 0.393, 0.392]
+        des_y = [0.234982, 0.078136, 0.078286, 0.077720, 0.0778332]
 
         # AES line + marked points
         aes_points_x = [5, 15, 25, 35, 45]
