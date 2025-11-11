@@ -23,8 +23,9 @@ class LineGraph(QWidget):
         # X values
         x = [0, 5, 15, 25, 35, 45, 50]
 
-        # DES sample line (you can update these values as needed)
-        des_y = [0.234982, 0.078136, 0.078286, 0.077720, 0.0778332]
+        # DES line + marked points
+        des_points_x = [5, 15, 25, 35, 45]
+        des_points_y = [0.078921, 0.078286, 0.078136, 0.077720, 0.0778332]
 
         # AES line + marked points
         aes_points_x = [5, 15, 25, 35, 45]
@@ -32,9 +33,11 @@ class LineGraph(QWidget):
 
         # For a smooth line: match x axis positions
         aes_y_full = [None, 0.397293, 0.393768, 0.392728, 0.392346, 0.391747, None]
+        des_y_full = [None, 0.078921, 0.078286, 0.078136, 0.077720, 0.0778332, None]
 
         # Plot DES (blue)
-        # ax.plot(x, des_y, label="DES")
+        # ax.plot(x, des_y_full, "b-", label="DES")
+        # ax.scatter(des_points_x, des_points_y, color="blue")
 
         # Plot AES (red line + red dots)
         ax.plot(x, aes_y_full, "r-", label="AES")
@@ -47,9 +50,12 @@ class LineGraph(QWidget):
         # Set custom ticks
         ax.set_xticks(x)
         ax.set_yticks([0.390 + i * 0.001 for i in range(11)])
+        # ax.set_yticks([0.0776, 0.0778, 0.0780, 0.0782, 0.0784, 0.0786, 0.0788, 0.0790])
 
         # Add legend
         ax.legend()
+        
+        fig.tight_layout()
 
         # Redraw
         self.canvas.draw()
