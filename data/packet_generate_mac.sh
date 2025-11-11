@@ -5,10 +5,10 @@ mkdir -p packets
 # Sizes in bytes
 declare -A sizes=(
   ["5mb"]=5242880
-  # ["15mb"]=15728640
-  # ["25mb"]=26214400
-  # ["35mb"]=36700160
-  # ["45mb"]=47185920
+  ["15mb"]=15728640
+  ["25mb"]=26214400
+  ["35mb"]=36700160
+  ["45mb"]=47185920
 )
 
 # Generate 5 files per size
