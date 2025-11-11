@@ -94,7 +94,7 @@ if __name__ == "__main__":
     print("Loaded DOCUMENTS_FILES:", DOCUMENTS_FILES)
     print("Loaded IMAGES_FILES:", IMAGES_FILES)
 
-    if "--run-aes-tests" in sys.argv:
+    if "--run-aes-test" in sys.argv:
         run_aes_efficiency_test(keys)
         sys.exit(0)
 
