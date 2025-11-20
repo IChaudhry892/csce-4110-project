@@ -16,20 +16,6 @@ This program requires **Python 3** and a virtual environment containing the nece
 
 All required modules are included in the `venv` folder. 
 
-## How to run:
-
-### 1. Activate the virtual environment
-
-```bash
-$ source venv/bin/activate
-```
-
-### 2. Run the main program
-
-```python
-$ python main.py
-```
-
 If **python** invokes Python 2 on your system, use `python3` instead.
 
 ## Running the Sensitivity Tests:
