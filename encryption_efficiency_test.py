@@ -158,7 +158,7 @@ if __name__ == "__main__":
         run_aes_efficiency_test(keys)
         sys.exit(0)
 
-    if "--run-des-tests" in sys.argv:
+    if "--run-des-test" in sys.argv:
         run_des_efficiency_test(keys)
         sys.exit(0)
 
