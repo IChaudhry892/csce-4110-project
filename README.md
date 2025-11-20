@@ -60,13 +60,19 @@ $ python sensitivity_tests.py --run-aes-tests-blocks
 
 ## Running Encryption Efficiency Tests
 
-### To Run AES Tests
+### Run Both AES and DES tests
+
+```python
+$ python encryption_efficiency_test.py
+```
+
+### To Run AES Test Only
 
 ```python
 $ python encryption_efficiency_test.py --run-aes-test
 ```
 
-### To Run DES Tests
+### To Run DES Test Only
 
 ```python
 $ python encryption_efficiency_test.py --run-des-test
@@ -74,13 +80,19 @@ $ python encryption_efficiency_test.py --run-des-test
 
 ## Running Security Tests
 
-### To Run AES Tests
+### Run Both AES and DES tests
+
+```python
+$ python security_test.py
+```
+
+### To Run AES Test Only
 
 ```python
 $ python security_test.py --run-aes-test
 ```
 
-### To Run DES Tests
+### To Run DES Test Only
 
 ```python
 $ python security_test.py --run-des-test
@@ -101,6 +113,12 @@ If you're running the program on a MacOS, packets must be generated this way:
 $ cd data
 $ chmod +x packet_generate_mac.sh
 $ ./packet_generate_mac.sh
+```
+
+### Run Both AES and DES tests
+
+```python
+$ python attack_resistance_test.py
 ```
 
 ### To Run AES Tests
