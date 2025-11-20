@@ -46,3 +46,23 @@ $ python sensitivity_tests.py --run-aes-tests
 ```
 $ python sensitivity_tests.py --run-aes-tests-blocks
 ```
+
+## Running Encryption Efficiency Tests
+
+### To Run AES Tests
+
+```python
+
+```
+
+## Running Security Tests
+
+```python
+
+```
+
+## Running Attack Resistance Tests
+
+```python
+
+```
